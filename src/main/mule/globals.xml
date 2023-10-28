@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="1f595f2b-9389-41a5-b068-49a570f5a64b" file="swiggy-${env}.yaml" />
+	<global-property doc:name="Global Property" doc:id="b39dcc0a-9ecb-4120-b05f-f4c7241af583" name="env" value="dev" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="603a0d16-5d43-46d9-96ed-1bb74797d4f3" >
+		<db:my-sql-connection host="${db.host}" port="3306" user="${db.username}" password="${db.password}" database="${db.name}" />
+	</db:config>
+	<configuration doc:name="Configuration" doc:id="d73d61db-b56b-4683-8880-d46f2f517516" defaultErrorHandler-ref="globalsError_Handler" />
+	<error-handler name="globalsError_Handler" doc:id="837b59f2-48bc-48c5-80ad-b545944c4417" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="180243b2-5f72-45ee-acfb-5a1bd86e823d" >
+			<ee:transform doc:name="Transform Message" doc:id="2ff96db4-d574-4719-be73-07ba79f2f043" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status": "500",
+  "message": "There was some server side problem. Please try later"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+</mule>

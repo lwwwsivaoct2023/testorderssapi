@@ -3,7 +3,7 @@
     <http:listener-config name="swiggy-orders-sapi-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
-    <apikit:config name="swiggy-orders-sapi-config" api="resource::d0205d5f-f064-4d78-b0f0-1e4d55cdf281:swiggy-orders-sapi:2.0.0:raml:zip:swiggy-orders-sapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <apikit:config name="swiggy-orders-sapi-config" api="resource::d0205d5f-f064-4d78-b0f0-1e4d55cdf281:swiggy-orders-sapi:2.0.1:raml:zip:swiggy-orders-sapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <flow name="swiggy-orders-sapi-main">
         <http:listener config-ref="swiggy-orders-sapi-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -129,16 +129,6 @@ output application/json
                 <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform doc:name="Transform Message">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  status: "404",
-  message: "Customer  not found"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+        <flow-ref doc:name="getallordersofcustomer" doc:id="7225ca75-65bd-4665-8d86-0c98f8395195" name="getallordersofcustomer" />
     </flow>
 </mule>
