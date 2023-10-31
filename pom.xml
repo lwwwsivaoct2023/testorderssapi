@@ -58,7 +58,7 @@
 		<dependency>
 			<groupId>d0205d5f-f064-4d78-b0f0-1e4d55cdf281</groupId>
 			<artifactId>swiggy-orders-sapi</artifactId>
-			<version>3.0.1</version>
+			<version>3.0.2</version>
 			<classifier>raml</classifier>
 			<type>zip</type>
 		</dependency>

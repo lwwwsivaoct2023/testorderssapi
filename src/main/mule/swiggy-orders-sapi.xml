@@ -3,7 +3,7 @@
     <http:listener-config name="swiggy-orders-sapi-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
-    <apikit:config name="swiggy-orders-sapi-config" api="resource::d0205d5f-f064-4d78-b0f0-1e4d55cdf281:swiggy-orders-sapi:3.0.1:raml:zip:swiggy-orders-sapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <apikit:config name="swiggy-orders-sapi-config" api="resource::d0205d5f-f064-4d78-b0f0-1e4d55cdf281:swiggy-orders-sapi:3.0.2:raml:zip:swiggy-orders-sapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <flow name="swiggy-orders-sapi-main">
         <http:listener config-ref="swiggy-orders-sapi-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -158,8 +158,8 @@ output application/java
                 <ee:set-variable variableName="orderId">attributes.uriParams.'orderId'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <flow-ref doc:name="deleteorderbyid" doc:id="1978b93c-248e-4be5-98ea-092e7f40cde8" name="deleteorderbyid"/>
-		<ee:transform doc:name="Transform Message">
+        <flow-ref doc:name="deleteorderbyid" doc:id="1978b93c-248e-4be5-98ea-092e7f40cde8" name="deleteorderbyid" />
+        <ee:transform doc:name="Transform Message">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -177,6 +177,22 @@ output application/json
                 <ee:set-variable variableName="orderId">attributes.uriParams.'orderId'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <flow-ref doc:name="findOrderById" doc:id="c973896a-84ae-4bfc-a7d1-f9ade5bb42ff" name="findOrderById"/>
+        <flow-ref doc:name="findOrderById" doc:id="c973896a-84ae-4bfc-a7d1-f9ade5bb42ff" name="findOrderById" />
+    </flow>
+    <flow name="get:\orders\(orderId)\orderItems:swiggy-orders-sapi-config">
+        <ee:transform doc:name="Transform Message">
+            <ee:variables>
+                <ee:set-variable variableName="orderId">attributes.uriParams.'orderId'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="getOrderItemsByOrderId" doc:id="030cbb67-5399-4a8b-86c0-11762633ab3e" name="getOrderItemsByOrderId"/>
+    </flow>
+    <flow name="post:\orders\(orderId)\orderItems:application\json:swiggy-orders-sapi-config">
+        <ee:transform doc:name="Transform Message">
+            <ee:variables>
+                <ee:set-variable variableName="orderId">attributes.uriParams.'orderId'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+		<flow-ref doc:name="AddOrderItemToOrder" doc:id="3e4efc74-f90f-4632-89c9-85a058f21d94" name="AddOrderItemToOrder"/>
     </flow>
 </mule>

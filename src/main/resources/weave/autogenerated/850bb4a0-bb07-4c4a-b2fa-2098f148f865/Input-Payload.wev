@@ -1,0 +1,13 @@
+%dw 2.0
+
+type auto_850bb4a0_bb07_4c4a_b2fa_2098f148f865_Input_Payload = {
+  quantity: Number, 
+  orderId: Number, 
+  orderItemId: Number, 
+  menuId: Number, 
+  restaurantId: Number, 
+  orderItemPrice: Number, 
+  menuItemId: Number, 
+  _?: Any
+}
+

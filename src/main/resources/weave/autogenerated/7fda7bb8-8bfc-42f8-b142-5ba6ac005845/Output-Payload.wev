@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_7fda7bb8_8bfc_42f8_b142_5ba6ac005845_Output_Payload = Array<{|  menuId: Number | Null,   menuItemId: String | Null,   orderItemId: Number,   orderId: Number | Null,   orderItemPrice: Number | Null,   restaurantId: Number | Null,   quantity: Number | Null|}>
+
