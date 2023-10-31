@@ -1,0 +1,5 @@
+%dw 2.0
+
+type auto_968bdad8_f47a_403f_9313_54cb8150204b_Output_Payload = Array<{|  orderId: Number {"typeId": "int"},   customerId: String,   restaurantId: String,   deliveryAddressId: String,   orderTotalPrice: Number {"typeId": "int"},   orderStatus: String,   orderTime: String,   orderItems: Array<{|    orderItemId: Number {"typeId": "int"},     orderId: Number {"typeId": "int"},     menuId: Number {"typeId": "int"},     menuItemId: String,     restaurantId: String,     quantity: Number {"typeId": "int"},     orderItemPrice: Number {"typeId": "int"}  |}>
+|}>
+

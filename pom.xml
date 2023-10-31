@@ -58,11 +58,11 @@
 		<dependency>
 			<groupId>d0205d5f-f064-4d78-b0f0-1e4d55cdf281</groupId>
 			<artifactId>swiggy-orders-sapi</artifactId>
-			<version>2.0.1</version>
+			<version>3.0.1</version>
 			<classifier>raml</classifier>
 			<type>zip</type>
 		</dependency>
-		<dependency>
+		<dependency> 
 			<groupId>org.mule.modules</groupId>
 			<artifactId>mule-apikit-module</artifactId>
 			<version>1.8.2</version>

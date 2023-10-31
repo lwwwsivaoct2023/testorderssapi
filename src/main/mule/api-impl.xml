@@ -5,18 +5,97 @@
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<flow name="getallordersofcustomer" doc:id="3fb57baf-34af-4ba3-b99c-b59ffb6263b4" >
-		<db:select doc:name="Select" doc:id="f2038e51-84f1-4bd3-a041-bb764c9787d3" config-ref="Database_Config">
-			<db:sql ><![CDATA[select o.order_id, o.customer_id,o.restaurant_id,o.delivery_address_id,o.order_total_price,o.order_status,o.order_time,
-oi.order_item_id,oi.menu_item_id,oi.quantity,oi.order_item_price,oi.menu_id
- from orders o left join order_items oi on o.order_id= oi.order_id where o.customer_id = :custid]]></db:sql>
+	<flow name="deleteorderbyid" doc:id="40743aad-68bb-47c6-b8d3-4d349cfe728e" >
+		<db:delete doc:name="Delete OrderItems" doc:id="0ce38469-d635-4a11-af63-bead325e616f" config-ref="Database_Config">
+			<db:sql ><![CDATA[DELETE FROM `order_items` where order_id =:orderId
+]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
-	custid: vars.id as Number
+	orderId: vars.orderId
 }]]]></db:input-parameters>
-		</db:select>
-		<ee:transform doc:name="Transform Message" doc:id="8a0e8bd5-11da-44db-a2cf-adeb3531591f" >
+		</db:delete>
+		<db:delete doc:name="Delete Order" doc:id="7dcf4329-7c83-4944-aba2-62e398acecbb" config-ref="Database_Config">
+			<db:sql ><![CDATA[DELETE FROM `orders` where order_id =:orderId
+]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	orderId: vars.orderId
+}]]]></db:input-parameters>
+		</db:delete>
+		<choice doc:name="Choice" doc:id="c0994ae4-9b0e-4f66-bb21-924a068a57cf" >
+			<when expression="#[payload == 0]">
+				<raise-error doc:name="Raise error" doc:id="a27cc8df-e76c-411f-ae7c-7dec4b564763" type="APP:DOESNOTEXIST" description="Order Doesn't exist"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="5ba3ef2e-2f43-425c-87a6-0c7cb3e3fdcf" message="Deleted order"/>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="AddOrder" doc:id="4d5a80ef-d2bd-406b-9fcd-37ab2f37a8a2" >
+		<ee:transform doc:name="Transform Message" doc:id="dc1a39e1-309b-4017-b3ce-90f6a2fe7475" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="inputOrder" ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:insert doc:name="Insert" doc:id="c822ab93-8ee2-42ab-83cd-b61b9c44fa67" config-ref="Database_Config" autoGenerateKeys="true" target="insertresult">
+			<db:sql ><![CDATA[INSERT INTO `orders`(`customer_id`,`restaurant_id`,`delivery_address_id`,`order_total_price`,`order_status`,`order_time`)
+VALUES(:customerId,:restaurantId,:addressId,:totalPrice,:orderstatus,:ordertime)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	customerId: vars.inputOrder.customerId,
+	restaurantId: vars.inputOrder.restaurantId,
+	addressId: vars.inputOrder.deliveryAddressId,
+	totalPrice: vars.inputOrder.orderTotalPrice,
+	orderstatus: vars.inputOrder.orderStatus,
+	ordertime: vars.inputOrder.orderTime
+	
+}]]]></db:input-parameters>
+			<db:auto-generated-keys-column-names >
+				<db:auto-generated-keys-column-name value="order_id" />
+			</db:auto-generated-keys-column-names>
+		</db:insert>
+		<ee:transform doc:name="Store GeneratedOrderId variable" doc:id="0be5f17a-1ee8-4cda-83aa-6ac0fe232a1a" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="orderid" ><![CDATA[%dw 2.0
+output application/json
+---
+vars.insertresult.generatedKeys.GENERATED_KEY]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="caa96028-7de8-4dca-8cb8-1832c25a9dc2" collection="#[vars.inputOrder.orderItems]">
+			<db:insert doc:name="Insert" doc:id="49f28d87-f6d9-452b-b82b-ee12bb2be263" config-ref="Database_Config">
+				<db:sql ><![CDATA[INSERT INTO `order_items`(`order_id`,`menu_item_id`,`quantity`,`order_item_price`,`menu_id`,`restaurant_id`)
+VALUES(:orderId,:menuItemId,:quantity,:orderItemPrice,:menuId,:restaurantId);]]></db:sql>
+				<db:input-parameters ><![CDATA[#[{
+	orderId: vars.orderid,
+	menuItemId: payload.menuItemId,
+	quantity: payload.quantity,
+	orderItemPrice: payload.orderItemPrice,
+	menuId:payload.menuId,
+	restaurantId: payload.restaurantId
+	
+}]]]></db:input-parameters>
+			</db:insert>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="f869e438-8886-4409-8fbb-7640c820296c" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	orderId: vars.orderid
+} ++ vars.inputOrder]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<sub-flow name="mapdbselectresponsetoorder" doc:id="968bdad8-f47a-403f-9313-54cb8150204b" >
+		<ee:transform doc:name="Transform Message" doc:id="8a0e8bd5-11da-44db-a2cf-adeb3531591f">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 var groupedOrders = payload groupBy (item) -> item.order_id
 var ordersMap = groupedOrders mapObject (V,K,I) -> {
@@ -51,6 +130,25 @@ ordersMap pluck (V,K,I) -> V
 ]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+	</sub-flow>
+	<flow name="getallorders" doc:id="ea468934-b200-4f8b-92d9-5055d76daa2a" >
+		<db:select doc:name="Select" doc:id="c98a15ac-9e00-4ce6-a417-11e0b4cf9e5d" config-ref="Database_Config">
+			<db:sql ><![CDATA[select o.order_id, o.customer_id,o.restaurant_id,o.delivery_address_id,o.order_total_price,o.order_status,o.order_time,
+oi.order_item_id,oi.menu_item_id,oi.quantity,oi.order_item_price,oi.menu_id
+ from orders o left join order_items oi on o.order_id= oi.order_id ]]></db:sql>
+		</db:select>
+		<flow-ref doc:name="mapdbselectresponsetoorder" doc:id="5faa522f-4823-4dfc-8bdf-54c157fcd7b8" name="mapdbselectresponsetoorder"/>
+	</flow>
+	<flow name="getallordersofcustomer" doc:id="3fb57baf-34af-4ba3-b99c-b59ffb6263b4" >
+		<db:select doc:name="Select" doc:id="f2038e51-84f1-4bd3-a041-bb764c9787d3" config-ref="Database_Config">
+			<db:sql ><![CDATA[select o.order_id, o.customer_id,o.restaurant_id,o.delivery_address_id,o.order_total_price,o.order_status,o.order_time,
+oi.order_item_id,oi.menu_item_id,oi.quantity,oi.order_item_price,oi.menu_id
+ from orders o left join order_items oi on o.order_id= oi.order_id where o.customer_id = :custid]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	custid: vars.id as Number
+}]]]></db:input-parameters>
+		</db:select>
+		<flow-ref doc:name="mapdbselectresponsetoorder" doc:id="213c59be-3c29-441c-81ff-339ee4bacc08" name="mapdbselectresponsetoorder" />
 		<error-handler >
 			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="91fdf41c-82ad-4d55-ab48-bf46cdf23cb5" >
 				<ee:transform doc:name="Transform Message" doc:id="fb52b119-5361-4bcb-8859-141de9ffa394" >
@@ -66,5 +164,23 @@ output application/json
 				</ee:transform>
 			</on-error-propagate>
 		</error-handler>
+	</flow>
+	<flow name="findOrderById" doc:id="0f3ab522-9abc-4014-9547-835e5c4f6a9b" >
+		<db:select doc:name="Select" doc:id="1eabc42f-7fbc-422c-9e5f-7fcd8b85c13c" config-ref="Database_Config">
+			<db:sql ><![CDATA[select o.order_id, o.customer_id,o.restaurant_id,o.delivery_address_id,o.order_total_price,o.order_status,o.order_time,
+oi.order_item_id,oi.menu_item_id,oi.quantity,oi.order_item_price,oi.menu_id
+ from orders o left join order_items oi on o.order_id= oi.order_id where o.order_id =:orderId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	orderId: vars.orderId
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="1f13814d-bd70-460b-b487-2f2a641278ca" >
+			<when expression="#[isEmpty(payload)]">
+				<raise-error doc:name="Raise error" doc:id="d84181e9-2bc1-4438-bdd0-c4a3f13adbd3" type="APP:DOESNOTEXIST" description="Order Doesn't Exist"/>
+			</when>
+			<otherwise>
+				<flow-ref doc:name="mapdbselectresponsetoorder" doc:id="63b880a6-bb79-4619-96a7-5e314c195fb8" name="mapdbselectresponsetoorder"/>
+			</otherwise>
+		</choice>
 	</flow>
 </mule>

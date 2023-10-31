@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_4d5a80ef_d2bd_406b_9fcd_37ab2f37a8a2_Input_Variables_outboundHeaders = {| location: String |}
+
